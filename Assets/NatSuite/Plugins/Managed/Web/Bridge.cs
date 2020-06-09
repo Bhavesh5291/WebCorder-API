@@ -10,9 +10,11 @@ namespace NatSuite.Web.Internal {
 
     public static class Bridge {
 
+        private const string Assembly = @"__Internal";
+
         public delegate void CompletionHandler (IntPtr context, IntPtr path);
 
-        #if UNITY_WEBGL
+        #if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport(Assembly, EntryPoint = @"WCRecording")]
         public static extern bool Recording ();
         [DllImport(Assembly, EntryPoint = @"WCStartRecording")]
