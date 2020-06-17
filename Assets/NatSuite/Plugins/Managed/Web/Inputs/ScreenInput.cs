@@ -3,7 +3,7 @@
 *   Copyright (c) 2020 Yusuf Olokoba.
 */
 
-namespace NatSuite.Recorders.Input {
+namespace NatSuite.Recorders.Inputs {
 
     using UnityEngine;
     using System;

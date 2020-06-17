@@ -1,5 +1,5 @@
 /* 
-*   WebCorder
+*   NatCorder
 *   Copyright (c) 2020 Yusuf Olokoba.
 */
 
@@ -18,6 +18,7 @@ const WebCorder = {
         const videoStream = frameBuffer.captureStream(frameRate);
         const videoTrack = videoStream.getVideoTracks()[0];
         // Setup audio encoder
+        const recordAudio = sampleRate > 0 && channelCount > 0;
         const audioContext = recordAudio ? new AudioContext({ latencyHint: "interactive", sampleRate }) : undefined;
         const audioStream = audioContext && audioContext.createMediaStreamDestination({ channelCount, channelCountMode: "explicit" });
         const audioTrack = audioStream && audioStream.stream.getAudioTracks()[0]
@@ -42,7 +43,7 @@ const WebCorder = {
         return sharedInstance.push(recorderInfo) - 1;
     },
 
-    NCFrameSize : function (recorderPtr, outWidth, outHeight) {
+    NCFrameSize : function (recorderPtr, outWidth, outHeight) { // INCOMPLETE
         const recorderInfo = sharedInstance[recorderPtr];
     },
 
@@ -50,13 +51,15 @@ const WebCorder = {
         // Get encoder
         const recorderInfo = sharedInstance[recorderPtr];
         const frameBufferContext = recorderInfo.frameBufferContext;
-        const pixelBuffer = recorderInfo.pixelBuffer;
+        const encoderBuffer = recorderInfo.pixelBuffer;
         // Invert
-        var stride = 4 * pixelBuffer.width;
-        for (var i = 0; i < pixelBuffer.height; i++)
-            pixelBuffer.data.set(new Uint8Array(HEAPU8.buffer, pixelBuffer + (pixelBuffer.height - i - 1) * stride, stride), i * stride);
+        var stride = 4 * encoderBuffer.width;
+        for (var i = 0; i < encoderBuffer.height; i++) {
+            const srcBuffer = new Uint8Array(HEAPU8.buffer, pixelBuffer + (encoderBuffer.height - i - 1) * stride, stride);
+            encoderBuffer.data.set(srcBuffer, i * stride);
+        }
         // Commit
-        frameBufferContext.putImageData(pixelBuffer, 0, 0);
+        frameBufferContext.putImageData(encoderBuffer, 0, 0);
     },
 
     NCCommitSamples : function (recorderPtr, sampleBuffer, sampleCount, timestamp) { // INCOMPLETE
@@ -68,11 +71,11 @@ const WebCorder = {
         const channelCount = undefined;
         // Create buffer
         const audioBuffer = audioContext.createBuffer(channelCount, sampleCount / channelCount, sampleRate);
-        sampleBuffer = new Float32Array(HEAPU8.buffer, sampleBuffer, sampleCount);
+        const srcBuffer = new Float32Array(HEAPU8.buffer, sampleBuffer, sampleCount);
         for (var c = 0; c < audioBuffer.numberOfChannels; c++) {
             const channelData = audioBuffer.getChannelData(c);
             for (var i = 0; i < audioBuffer.length; i++)
-                channelData[i] = sampleBuffer[i * audioBuffer.numberOfChannels + c];
+                channelData[i] = srcBuffer[i * audioBuffer.numberOfChannels + c];
         }
         // Commit buffer
         var audioSource = audioContext.createBufferSource();

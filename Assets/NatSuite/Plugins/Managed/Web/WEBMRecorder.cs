@@ -1,5 +1,5 @@
 /* 
-*   WebCorder
+*   NatCorder
 *   Copyright (c) 2020 Yusuf Olokoba.
 */
 
