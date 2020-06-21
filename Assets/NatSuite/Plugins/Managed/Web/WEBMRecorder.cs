@@ -14,7 +14,7 @@ namespace NatSuite.Recorders {
     /// <summary>
     /// WEBM video recorder.
     /// </summary>
-    public class WEBMRecorder {
+    public class WEBMRecorder /* : IMediaRecorder */ {
 
         #region --Client API--
         /// <summary>
@@ -47,17 +47,27 @@ namespace NatSuite.Recorders {
         /// The pixel buffer MUST have an RGBA8888 pixel layout.
         /// </summary>
         /// <param name="pixelBuffer">Pixel buffer containing video frame to commit.</param>
-        public void CommitFrame<T> (T[] pixelBuffer) where T : struct {
+        /// <param name="timestamp">Not used.</param>
+        public void CommitFrame<T> (T[] pixelBuffer, long timestamp = default) where T : struct {
             var handle = GCHandle.Alloc(pixelBuffer, GCHandleType.Pinned);
-            recorder.CommitFrame(handle.AddrOfPinnedObject(), default);
+            CommitFrame(handle.AddrOfPinnedObject(), timestamp);
             handle.Free();
         }
+
+        /// <summary>
+        /// Commit a video pixel buffer for encoding.
+        /// The pixel buffer MUST have an RGBA8888 pixel layout.
+        /// </summary>
+        /// <param name="nativeBuffer">Pixel buffer in native memory to commit.</param>
+        /// <param name="timestamp">Not used.</param>
+        public void CommitFrame (IntPtr nativeBuffer, long timestamp = default) => recorder.CommitFrame(nativeBuffer, timestamp);
 
         /// <summary>
         /// Commit an audio sample buffer for encoding.
         /// </summary>
         /// <param name="sampleBuffer">Linear PCM audio sample buffer, interleaved by channel.</param>
-        public void CommitSamples (float[] sampleBuffer) => recorder.CommitSamples(sampleBuffer, sampleBuffer.Length, default);
+        /// <param name="timestamp">Not used.</param>
+        public void CommitSamples (float[] sampleBuffer, long timestamp = default) => recorder.CommitSamples(sampleBuffer, sampleBuffer.Length, timestamp);
 
         /// <summary>
         /// Finish writing and return the path to the recorded media file.
